@@ -1,0 +1,104 @@
+<template>
+  <div class="login">
+      <h3>登录界面</h3>
+      <el-form ref="ruleFormRef"  :rules="rules" :model="ruleForm" status-icon class="demo-ruleForm" >
+          <el-form-item prop="username">
+          <el-input size="large" v-model="ruleForm.username" placeholder="请输入用户名" >
+              <template #prefix>
+                  <el-icon :size="20"><User/></el-icon>
+              </template>
+          </el-input>
+          </el-form-item>
+          <el-form-item prop="password">
+          <el-input v-model="ruleForm.password" placeholder="请输入密码">
+              <template #prefix>
+                  <el-icon :size="20"><Lock/></el-icon>
+              </template>
+          </el-input>
+          </el-form-item>
+          <el-form-item>
+          <el-button type="primary" @click="submitForm(ruleFormRef)">登录</el-button>
+          </el-form-item>
+      </el-form>
+  </div>
+</template>
+
+<script lang="ts" setup>
+import { reactive, ref } from 'vue'
+import { User, Lock }  from "@element-plus/icons-vue"
+import { useRouter } from 'vue-router';
+import axios from 'axios';
+
+import type { FormInstance, FormRules } from 'element-plus'
+
+
+
+const ruleFormRef = ref<FormInstance>()
+
+const router = useRouter()
+
+const ruleForm = reactive({
+username: '',
+password: '',
+})
+
+const checkAge = (rule: any, value: any, callback: any) => {
+
+  if (!(/^[a-zA-Z0-9_-]{6,18}$/).test(value)){
+      callback(new Error("请输入6-18位数密码"))
+    } else{
+      callback()
+    }
+    
+  
+}
+
+const rules = {
+  username: [{ required: true, message: '请输入用户名', trigger: 'blur' }],
+  password: [{ validator: checkAge, trigger: 'blur' }],
+}
+
+
+
+
+function getpath (){
+  const data = new FormData();
+    data.append("username",ruleForm.username)
+    data.append("password",ruleForm.password)
+     axios.post('http://localhost:6060/login',data).then((response) =>{
+      const res = response.data;
+      if (res.code == 200) {
+        router.push(res.data)
+      }}).catch((error) => {
+         console.error(error);
+     })
+}
+
+const submitForm = (formEl: FormInstance | undefined) => {
+  if (!formEl) return
+  formEl.validate((valid) => {
+    if (valid) {
+      getpath();
+    } else {
+      return false
+    }
+  })
+}
+</script>
+
+<style scoped lang="less">
+.login{
+  //background-color: rgb(196, 201, 219);
+  width: 400px;
+  margin: 200px auto 0;
+  border: 1px;
+  border-style: solid;
+  :deep(.el-input_inner){
+      height: 50px;
+      background-color: rgb(76, 0, 255);
+  }
+  :deep(.el-button--primary){
+      width: 100%;
+  }
+}
+</style>
